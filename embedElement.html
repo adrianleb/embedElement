@@ -1,4 +1,5 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
+<!-- <script src="http://connect.soundcloud.com/sdk.js"></script> -->
 
 <polymer-element name="embed-element" attributes="url">
   <template>
@@ -17,7 +18,39 @@
   </template>
   <script>
     (function() {
-      Polymer('embed-element', {});
+      // SC.initialize({
+      //   client_id: 'YOUR_CLIENT_ID'
+      // });
+      Polymer('embed-element', {
+        url: "",
+        created: function() {
+          console.debug('hello from el', this.url); 
+        },
+        urlChanged: function() {
+          console.log('url changed?', this.url);
+          youtubeRegex = /(?:http:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/g
+          youtubeEmbed = '<iframe width="600" height="400" src="http://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe>'
+
+          vimeoRegex = /(?:http:\/\/)?(?:www\.)?(?:vimeo\.com)\/(.+)/g
+          vimeoEmbed = '<iframe src="//player.vimeo.com/video/$1" width="600" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>'
+
+
+          // var track_url = 'http://soundcloud.com/forss/flickermood';
+          // SC.oEmbed(track_url, { auto_play: true }, function(oEmbed) {
+          //   console.log('oEmbed response: ' + oEmbed);
+          // });
+          var embed = this.url
+          var embed = embed.replace(youtubeRegex, youtubeEmbed)
+          var embed = embed.replace(vimeoRegex, vimeoEmbed)
+
+          var el = document.createElement('div')
+          this.$.container.innerHTML = embed
+          console.debug(embed)
+        },
+        attributeChanged: function(attrName, oldVal, newVal) {
+          console.log(attrName);
+        }
+      });
     })();
   </script>
 </polymer-element>
