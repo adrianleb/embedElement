@@ -1,5 +1,4 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
-<!-- <script src="http://connect.soundcloud.com/sdk.js"></script> -->
 
 <polymer-element name="embed-element" attributes="url">
   <template>
@@ -8,47 +7,63 @@
       :host {
         display: block;
         position: relative;
+        width: 600px;
       } 
+      #container {
+        margin-top: 10px;
+      }
     </style>
-
-    <div id="container">Hello World</div>
 
     <content></content>
 
+    <div id="container"></div>
+
+
   </template>
+  <script src="http://connect.soundcloud.com/sdk.js"></script>
+
   <script>
     (function() {
-      // SC.initialize({
-      //   client_id: 'YOUR_CLIENT_ID'
-      // });
+
+      SC.initialize({
+        client_id: 'b6bfd121c9975b3b4132bc370d837395'
+      })
+
+      var youtubeRegex = /(?:http:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/g
+      var youtubeEmbed = '<iframe width="600" height="400" src="http://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe>'
+
+      var vimeoRegex = /(?:http:\/\/)?(?:www\.)?(?:vimeo\.com)\/(.+)/g
+      var vimeoEmbed = '<iframe src="//player.vimeo.com/video/$1" width="600" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>'
+
+      var soundcloudRegex = /(?:http:\/\/)?(?:www\.)?(?:soundcloud\.com)\/(.+)/g
+
+
       Polymer('embed-element', {
         url: "",
-        created: function() {
-          console.debug('hello from el', this.url); 
-        },
         urlChanged: function() {
-          console.log('url changed?', this.url);
-          youtubeRegex = /(?:http:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/g
-          youtubeEmbed = '<iframe width="600" height="400" src="http://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe>'
-
-          vimeoRegex = /(?:http:\/\/)?(?:www\.)?(?:vimeo\.com)\/(.+)/g
-          vimeoEmbed = '<iframe src="//player.vimeo.com/video/$1" width="600" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>'
-
-
-          // var track_url = 'http://soundcloud.com/forss/flickermood';
-          // SC.oEmbed(track_url, { auto_play: true }, function(oEmbed) {
-          //   console.log('oEmbed response: ' + oEmbed);
-          // });
           var embed = this.url
+
+          // youtube
           var embed = embed.replace(youtubeRegex, youtubeEmbed)
+
+          // vimeo
           var embed = embed.replace(vimeoRegex, vimeoEmbed)
 
-          var el = document.createElement('div')
+          // append
           this.$.container.innerHTML = embed
-          console.debug(embed)
-        },
-        attributeChanged: function(attrName, oldVal, newVal) {
-          console.log(attrName);
+
+          // soundcloud
+          if(this.url.match(soundcloudRegex)) {
+            that = this
+
+            // request sdk for embed code
+            SC.oEmbed(this.url, {}, function(oEmbed) {
+
+              // append
+              that.$.container.innerHTML = oEmbed.html
+            });
+            return false
+          }
         }
       });
     })();
