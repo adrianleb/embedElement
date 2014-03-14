@@ -1,0 +1,23 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<polymer-element name="embed-element" attributes="url">
+  <template>
+  
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      } 
+    </style>
+
+    <div id="container">Hello World</div>
+
+    <content></content>
+
+  </template>
+  <script>
+    (function() {
+      Polymer('embed-element', {});
+    })();
+  </script>
+</polymer-element>

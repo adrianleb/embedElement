@@ -1,0 +1,32 @@
+{
+  "name": "embedElement",
+  "version": "0.0.0",
+  "homepage": "https://github.com/adrianleb/embedElement",
+  "authors": [
+    "adrianleb <adrianleb@gmail.com>"
+  ],
+  "main": "embedElement.html",
+  "keywords": [
+    "components",
+    "web",
+    "components",
+    "embed",
+    "element",
+    "embedelement",
+    "element",
+    "embed"
+  ],
+  "license": "MIT",
+  "private": true,
+
+  "dependencies": {
+    "polymer": "Polymer/polymer"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
