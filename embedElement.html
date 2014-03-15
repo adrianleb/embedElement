@@ -12,6 +12,10 @@
       #container {
         margin-top: 10px;
       }
+      iframe {
+        width: 100%;
+        height: 400px;
+      }
     </style>
 
     <content></content>
@@ -23,46 +27,154 @@
   <script src="http://connect.soundcloud.com/sdk.js"></script>
 
   <script>
+
     (function() {
 
       SC.initialize({
         client_id: 'b6bfd121c9975b3b4132bc370d837395'
       })
 
-      var youtubeRegex = /(?:http:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/g
-      var youtubeEmbed = '<iframe width="600" height="400" src="http://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe>'
+      var providers =  {
+        youtube: {
+          matcher: /(?:youtube\.com|youtu\.be)/,
+          embed: {
+            matcher: /(?:http:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/g,
+            code: '<iframe width="600" height="400" src="http://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe>'
+          }
+        },
+        vimeo: {
+          matcher: /(?:vimeo\.com)/, 
+          endpoint: "http://vimeo.com/api/oembed.json?url=$1"
+        },
+        hulu: {
+          matcher: /(?:hulu\.com)/, 
+          endpoint: "http://www.hulu.com/api/oembed.json?url=$1"
+        },
+        collegeHumor: {
+          matcher: /(?:collegehumor\.com)/, 
+          endpoint: "http://www.collegehumor.com/oembed.json?url=$1"
+        },
+        jest: {
+          matcher: /(?:jest\.com)/, 
+          endpoint: "http://www.jest.com/oembed.json?url=$1"
+        },
+        embedly: {
+          matcher: /(?:embed\.ly)/, 
+          endpoint: "http://api.embed.ly/1/oembed?url=$1"
+        },
+        slideshare: {
+          matcher: /(?:slideshare\.net)/, 
+          endpoint: "http://www.slideshare.net/api/oembed/2?format=json&url=$1"
+        },
+        rdio: {
+          matcher: /(?:rdio\.com)/, 
+          endpoint: "http://www.rdio.com/api/oembed/?format=json&url=$1"
+        },
+        mixcloud: {
+          matcher: /(?:mixcloud\.com)/, 
+          endpoint: "http://www.mixcloud.com/oembed/?format=json&url=$1"
+        },
+        funnyordie: {
+          matcher: /(?:funnyordie\.com)/, 
+          endpoint: "http://www.funnyordie.com/oembed.json?url=$1"
+        },
+        justin: {
+          matcher: /(?:justin\.tv)/, 
+          endpoint: "http://api.justin.tv/api/embed/from_url.json?url=$1"
+        },
+        officialfm: {
+          matcher: /(?:official\.fm)/, 
+          endpoint: "http://$1oembed.json"
+        },
+        shoudio: {
+          matcher: /(?:shoudio\.com)/, 
+          endpoint: "http://shoudio.com/api/oembed?format=json&url=$1"
+        },
+        dailyMotion: {
+          matcher: /(?:dailymotion\.com)/, 
+          endpoint: "http://www.dailymotion.com/services/oembed?format=json&url=$1"
+        },
+        speakerDeck: {
+          matcher: /(?:speakerdeck\.com)/,
+          endpoint: "http://speakerdeck.com/oembed.json?url=$1"
+        },
+        kickstarter: {
+          matcher: /(?:kickstarter\.com)/, 
+          endpoint: "https://www.kickstarter.com/services/oembed?url=$1"
+        },
+        soundcloud: {
+          matcher:/(?:soundcloud\.com)\/(.+)/g,
+          method: function(url, callback) {
+            SC.oEmbed(url, {}, function(oEmbed) {
+              callback(oEmbed.html)
+            })
+          }
+        }
+      }
 
-      var vimeoRegex = /(?:http:\/\/)?(?:www\.)?(?:vimeo\.com)\/(.+)/g
-      var vimeoEmbed = '<iframe src="//player.vimeo.com/video/$1" width="600" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>'
+      var getJSON = function(url, successHandler, errorHandler) {
+        var xhr = new XMLHttpRequest();
+        if("withCredentials" in xhr) {
+        xhr.open('get', "http://jsonp.jit.su/?url=" + url, true);
+          xhr.onreadystatechange = function() {
+            var status, data;
+            if (xhr.readyState == 4) { // `DONE`
+              status = xhr.status;
+              if (status == 200) {
+                console.log(xhr.responseText);
+                data = JSON.parse(xhr.responseText);
+                successHandler && successHandler(data);
+              } else {
+                errorHandler && errorHandler(status);
+              }
+            }
+          };
+          xhr.send(null);
+        }
+      };
 
-      var soundcloudRegex = /(?:http:\/\/)?(?:www\.)?(?:soundcloud\.com)\/(.+)/g
 
 
       Polymer('embed-element', {
         url: "",
+        
         urlChanged: function() {
           var embed = this.url
 
-          // youtube
-          var embed = embed.replace(youtubeRegex, youtubeEmbed)
+          provider = {}
+          ps = Object.keys(providers)
+          for (var i = ps.length - 1; i >= 0; i--) {
+            p = providers[ps[i]]; 
+            if (embed.match(p.matcher) != null ) {
+              provider = p
+            }
+          }
 
-          // vimeo
-          var embed = embed.replace(vimeoRegex, vimeoEmbed)
-
-          // append
-          this.$.container.innerHTML = embed
-
-          // soundcloud
-          if(this.url.match(soundcloudRegex)) {
-            that = this
-
-            // request sdk for embed code
-            SC.oEmbed(this.url, {}, function(oEmbed) {
-
-              // append
-              that.$.container.innerHTML = oEmbed.html
-            });
-            return false
+          var that = this
+          if (provider.endpoint != undefined) {
+            var url = provider.endpoint.replace("$1", encodeURIComponent(embed))
+            // request xhr
+            getJSON(url, function(oembed) {
+              // xhr success
+              that.$.container.innerHTML = oembed.html
+            }, function(e, r) {
+              // xhr fail, request jsonp
+              var scr = document.createElement('script')
+              name =  "lalal" + Math.round(Math.random() * 1000000)             
+              window[name] = function(r, a, s) {
+                that.$.container.innerHTML = r.html
+              }
+              scr.src = url+"&callback=" + name
+              that.$.container.appendChild(scr)
+            })
+            
+          } else if (provider.method != undefined) {
+            provider.method(embed, function(html){
+              that.$.container.innerHTML = html
+            })
+          } else if (provider.embed != undefined) {
+            html = embed.replace(provider.embed.matcher, provider.embed.code)
+            that.$.container.innerHTML = html
           }
         }
       });
