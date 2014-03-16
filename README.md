@@ -1,6 +1,6 @@
 embedElement
 ============
-the universal control remote of embeding media on the web.
+the universal remote control of embeding media on the web.
 
 # Introduction
 embedElement is a polymer element for easily embedding dozens of different media providers on your website.
@@ -38,6 +38,13 @@ example:
 - Clone repository
 - Install depedensies with `bower`
 - run a simple http server of choice
+
+
+# how to use
+- embedElement depends on polymer(http://www.polymer-project.org/) and platform(http://www.polymer-project.org/docs/start/platform.html) you must load both before using embedElement
+- load scripts, add the tag and thats it!
+
+
 
 #TODO
 - stable jsonp proxy
